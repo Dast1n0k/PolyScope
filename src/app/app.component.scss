@@ -1,0 +1,38 @@
+:host { display: block; min-height: 100vh; }
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-end;
+  padding: 22px 28px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mark {
+  margin: 0;
+  font-size: 30px;
+  letter-spacing: -0.03em;
+}
+
+.sub {
+  margin: 6px 0 0;
+  color: var(--muted);
+  max-width: 40rem;
+}
+
+.status { color: var(--muted); font-size: 14px; }
+.ok { color: var(--yes); }
+.bad { color: var(--no); }
+
+button {
+  margin-left: 10px;
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  padding: 6px 10px;
+  cursor: pointer;
+}
+button:hover { background: rgba(215, 179, 106, 0.12); }
+
+main { padding: 16px 28px 40px; }

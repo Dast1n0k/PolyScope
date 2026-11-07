@@ -1,0 +1,80 @@
+:host { display: block; }
+.back { color: var(--gold); text-decoration: none; }
+.back:hover { text-decoration: underline; }
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin: 12px 0 16px;
+}
+.head img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+.eyebrow { color: var(--muted); margin: 0 0 6px; font-size: 13px; }
+h1 { margin: 0; font-size: 30px; line-height: 1.2; max-width: 48rem; }
+h2 { margin: 0; font-size: 16px; }
+
+.prob {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+.prob-bar {
+  display: flex;
+  height: 14px;
+  overflow: hidden;
+  background: rgba(255, 139, 122, 0.2);
+}
+.prob-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #2db87a, var(--yes));
+}
+.prob-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 12px;
+}
+.prob strong { font-size: 18px; white-space: nowrap; }
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+.metrics article, .panel {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 12px 14px;
+}
+.metrics span, small { display: block; color: var(--muted); font-size: 12px; }
+.metrics strong { font-size: 20px; }
+.yes { color: var(--yes); }
+.no { color: var(--no); }
+.panel { margin-top: 14px; }
+.panel-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.ranges { display: flex; gap: 6px; }
+.ranges button {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--line);
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.ranges button.on { border-color: var(--gold); color: var(--gold); }
+.chart { height: 300px; }
+.chart.tall { height: 320px; }
+.desc { white-space: pre-wrap; }
+.warn { color: var(--warn); }
+.note h2 { color: var(--gold); }
+
+@media (max-width: 900px) {
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  h1 { font-size: 24px; }
+}

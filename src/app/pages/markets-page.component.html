@@ -1,0 +1,100 @@
+<section class="stats">
+  <article>
+    <span>Ринків у індексі</span>
+    <strong>{{ store.count() }}</strong>
+  </article>
+  <article>
+    <span>Сумарний обсяг вибірки</span>
+    <strong>{{ money(loadedVolume()) }}</strong>
+  </article>
+  <article>
+    <span>Останнє злиття</span>
+    <strong>{{ store.lastSync() ? (store.lastSync() | date: 'HH:mm:ss') : '—' }}</strong>
+  </article>
+</section>
+
+@if (store.markets().length) {
+  <section class="overview">
+    <article>
+      <h2>Розподіл цін YES</h2>
+      <p>Скільки ринків у кожному діапазоні ймовірності — видно, де зараз «спірні» події.</p>
+      <div echarts [options]="distOptions()" class="mini-chart"></div>
+    </article>
+    <article>
+      <h2>Топ за обсягом 24 год</h2>
+      <p>Найактивніші ринки за останню добу в межах поточного індексу.</p>
+      <div echarts [options]="topOptions()" class="mini-chart"></div>
+    </article>
+  </section>
+}
+
+<section class="toolbar">
+  <mat-form-field appearance="outline">
+    <mat-label>Пошук ринку</mat-label>
+    <input matInput [ngModel]="query()" (ngModelChange)="query.set($event)" placeholder="Назва або питання" />
+  </mat-form-field>
+  <mat-form-field appearance="outline">
+    <mat-label>Сортування</mat-label>
+    <mat-select [ngModel]="sortKey()" (ngModelChange)="sortKey.set($event)">
+      <mat-option value="volume">За обсягом</mat-option>
+      <mat-option value="volume24h">За обсягом 24 год</mat-option>
+      <mat-option value="liquidity">За ліквідністю</mat-option>
+      <mat-option value="yesPrice">За ціною YES</mat-option>
+    </mat-select>
+  </mat-form-field>
+</section>
+<p class="hint">
+  У індексі до 200 відкритих ринків з конкурентною ціною YES (5–95%), відібраних за обсягом.
+  Long-shot вибори США та майже вирішені ринки (~0% / ~100%) не потрапляють у список.
+  Jev — лише на картці події і не створює ордерів.
+</p>
+
+@if (store.status() === 'error') {
+  <p class="banner">{{ store.errorMessage() }}</p>
+}
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Ринок</th>
+        <th>YES</th>
+        <th>NO</th>
+        <th>Обсяг</th>
+        <th>24 год</th>
+        <th>Ліквідність</th>
+        <th>Активність</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (market of visible(); track trackId($index, market)) {
+        <tr>
+          <td>
+            <a class="q" [routerLink]="['/markets', market.id]">{{ market.question }}</a>
+            <span class="odds" [title]="'YES ' + percent(market.yesPrice)">
+              <i [style.width.%]="market.yesPrice * 100"></i>
+            </span>
+          </td>
+          <td class="yes">{{ percent(market.yesPrice) }}<small>{{ cents(market.yesPrice) }}</small></td>
+          <td class="no">{{ percent(market.noPrice) }}<small>{{ cents(market.noPrice) }}</small></td>
+          <td>{{ money(market.volume) }}</td>
+          <td>{{ money(market.volume24h) }}</td>
+          <td>{{ money(market.liquidity) }}</td>
+          <td>{{ activity(market) == null ? '—' : (activity(market)! | number: '1.2-2') }}</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="7" class="empty">
+            @if (store.status() === 'loading') {
+              Завантаження ринків…
+            } @else if (store.status() === 'error') {
+              Список не завантажено.
+            } @else {
+              Нічого не знайдено за цим запитом.
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

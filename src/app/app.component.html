@@ -1,0 +1,21 @@
+﻿<header class="top">
+  <div>
+    <p class="mark">PolyScope</p>
+    <p class="sub">Індекс і аналітика ринків Polymarket. Без ставок і без доступу до коштів.</p>
+  </div>
+  <div class="status">
+    @if (store.live()) {
+      <span class="ok">Потік увімкнено</span>
+    } @else if (store.status() === 'loading') {
+      <span>Завантаження</span>
+    } @else if (store.status() === 'error') {
+      <span class="bad">Помилка мережі</span>
+      <button type="button" (click)="store.load()">Спробувати ще</button>
+    } @else {
+      <span class="ok">Дані з API</span>
+    }
+  </div>
+</header>
+<main>
+  <router-outlet />
+</main>

@@ -1,0 +1,200 @@
+﻿<a routerLink="/" class="back">← До списку ринків</a>
+
+@if (market(); as item) {
+  <header class="head">
+    <div>
+      <p class="eyebrow">
+        {{ item.closed ? 'Закритий ринок' : 'Відкритий ринок' }}
+        · індекс {{ when(item.updatedAt) }}
+        @if (tape(); as live) { · стрічка {{ when(live.updatedAt) }} }
+      </p>
+      <h1>{{ item.question }}</h1>
+    </div>
+    @if (item.image) {
+      <img [src]="item.image" alt="" />
+    }
+  </header>
+
+  <section class="prob">
+    <div>
+      <div class="prob-bar"><i [style.width.%]="item.yesPrice * 100"></i></div>
+      <div class="prob-labels">
+        <span class="yes">YES {{ percent(item.yesPrice) }}</span>
+        <span class="no">NO {{ percent(item.noPrice) }}</span>
+      </div>
+    </div>
+    <strong class="yes">{{ percent(item.yesPrice) }}</strong>
+  </section>
+
+  <section class="metrics">
+    <article>
+      <span>Індекс YES</span>
+      <strong class="yes">{{ percent(item.yesPrice) }}</strong>
+      <small>{{ cents(item.yesPrice) }}</small>
+    </article>
+    <article>
+      <span>Індекс NO</span>
+      <strong class="no">{{ percent(item.noPrice) }}</strong>
+      <small>{{ cents(item.noPrice) }}</small>
+    </article>
+    <article>
+      <span>Остання угода</span>
+      @if (latestTrade(); as trade) {
+        <strong [class.yes]="trade.outcome === 'YES'" [class.no]="trade.outcome === 'NO'">{{ trade.outcome }} {{ percent(trade.price) }}</strong>
+        <small>{{ trade.side === 'BUY' ? 'купівля' : 'продаж' }} · {{ ago(trade.ts) }} · {{ money(trade.usd) }}</small>
+      } @else {
+        <strong>—</strong>
+      }
+    </article>
+    <article>
+      <span>Спред</span>
+      <strong>{{ tape()?.spread == null ? '—' : percent(tape()!.spread!) }}</strong>
+      <small>
+        попит {{ tape()?.bestBid == null ? '—' : percent(tape()!.bestBid!) }}
+        · пропозиція {{ tape()?.bestAsk == null ? '—' : percent(tape()!.bestAsk!) }}
+      </small>
+    </article>
+    <article>
+      <span>Відкритий інтерес</span>
+      <strong>{{ tape()?.openInterest == null ? '—' : money(tape()!.openInterest!) }}</strong>
+    </article>
+    <article>
+      <span>Обсяг 24 год / тиждень</span>
+      <strong>{{ money(item.volume24h) }}</strong>
+      <small>тиждень {{ money(item.volume1wk ?? 0) }} · місяць {{ money(item.volume1mo ?? 0) }}</small>
+    </article>
+  </section>
+
+  @if (tape(); as live) {
+    <section class="flow">
+      <span>Купівля YES {{ money(live.flow.yesBuy) }}</span>
+      <span>Продаж YES {{ money(live.flow.yesSell) }}</span>
+      <span>Купівля NO {{ money(live.flow.noBuy) }}</span>
+      <span>Продаж NO {{ money(live.flow.noSell) }}</span>
+    </section>
+  }
+
+  <section class="desk-grid">
+    <article class="panel wide">
+      <div class="panel-head">
+        <h2>Історія ціни YES</h2>
+        <div class="ranges">
+          <button type="button" [class.on]="range() === '1d'" (click)="setRange('1d')">1 день</button>
+          <button type="button" [class.on]="range() === '1w'" (click)="setRange('1w')">1 тиждень</button>
+          <button type="button" [class.on]="range() === 'max'" (click)="setRange('max')">Увесь ряд</button>
+        </div>
+      </div>
+      @if (chartError()) { <p class="warn">{{ chartError() }}</p> }
+      <div echarts [options]="priceOptions()" class="chart"></div>
+    </article>
+
+    <article class="panel">
+      <h2>Обсяг за горизонтами</h2>
+      <div echarts [options]="volumeOptions()" class="chart"></div>
+    </article>
+
+    <article class="panel">
+      <h2>Потік угод у стрічці</h2>
+      <div echarts [options]="flowOptions()" class="chart"></div>
+    </article>
+
+    <article class="panel">
+      <h2>Найбільші угоди у стрічці</h2>
+      <div echarts [options]="tradeOptions()" class="chart"></div>
+    </article>
+
+    <article class="panel">
+      <h2>Стакан біля ціни</h2>
+      <div echarts [options]="bookOptions()" class="chart"></div>
+    </article>
+
+    <article class="panel wide">
+      <h2>Хто тримає велику позицію</h2>
+      <div echarts [options]="holderOptions()" class="chart tall"></div>
+    </article>
+  </section>
+
+  @if (tapeError()) { <p class="warn">{{ tapeError() }}</p> }
+
+  <section class="desk-grid">
+    <article class="panel">
+      <h2>Стрічка угод</h2>
+      <table class="tape">
+        <thead><tr><th>Коли</th><th>Бік</th><th>Ціна</th><th>Сума</th><th>Хто</th></tr></thead>
+        <tbody>
+          @for (trade of (tape()?.trades ?? []).slice(0, 12); track trade.ts + trade.wallet + trade.usd) {
+            <tr>
+              <td>{{ ago(trade.ts) }}</td>
+              <td [class.yes]="trade.outcome === 'YES'" [class.no]="trade.outcome === 'NO'">{{ trade.outcome }} {{ trade.side === 'BUY' ? 'купівля' : 'продаж' }}</td>
+              <td>{{ percent(trade.price) }}</td>
+              <td>{{ money(trade.usd) }}</td>
+              <td>{{ trade.trader }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="empty">Угод у відповіді ще немає.</td></tr>
+          }
+        </tbody>
+      </table>
+    </article>
+    <article class="panel">
+      <h2>Великі позиції</h2>
+      <table class="tape">
+        <thead><tr><th>Бік</th><th>Хто</th><th>Контракти</th><th>Оцінка</th></tr></thead>
+        <tbody>
+          @for (holder of (tape()?.holders ?? []).slice(0, 12); track holder.wallet + holder.outcome) {
+            <tr>
+              <td [class.yes]="holder.outcome === 'YES'" [class.no]="holder.outcome === 'NO'">{{ holder.outcome }}</td>
+              <td>{{ holder.trader }}</td>
+              <td>{{ holder.shares | number: '1.0-0' }}</td>
+              <td>{{ money(holder.usd) }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="4" class="empty">Список позицій ще порожній.</td></tr>
+          }
+        </tbody>
+      </table>
+    </article>
+  </section>
+
+  <section class="panel note">
+    <div class="panel-head">
+      <h2>Порівняння з Jev AI</h2>
+      <button type="button" class="gold-btn" [disabled]="jev.running()" (click)="askJev()">
+        {{ jev.running() ? 'Надсилання стрічки…' : 'Надіслати цю подію в Jev' }}
+      </button>
+    </div>
+    <p>У модель іде питання, умова, ціни, спред, відкритий інтерес, великі угоди і найбільші позиції. Це порівняння ймовірності з ціною ринку, не ордер.</p>
+    @if (jevNote(); as ai) {
+      <p class="verdict">
+        Jev: {{ ai.direction }} {{ percent(ai.probability) }}.
+        Ринок: {{ percent(ai.marketPrice) }}.
+        Розрив: {{ (ai.gap * 100).toFixed(1) }} п.п.
+      </p>
+      <p>
+        @if (ai.gap > 0.05) {
+          Модель оцінює YES вище за поточну ціну. Це не порада купувати.
+        } @else if (ai.gap < -0.05) {
+          Модель оцінює YES нижче за поточну ціну. Це не порада продавати.
+        } @else {
+          Оцінка Jev близька до ціни ринку.
+        }
+      </p>
+    }
+    @if (insight(); as note) {
+      <p>{{ note.rationale }}</p>
+    }
+    @if (jev.error()) { <p class="warn">{{ jev.error() }}</p> }
+    <p class="warn">PolyScope не виставляє ордери і не керує коштами. Точний результат події заздалегідь невідомий.</p>
+  </section>
+
+  @if (item.description) {
+    <section class="panel">
+      <h2>Умова ринку</h2>
+      <p class="desc">{{ item.description }}</p>
+    </section>
+  }
+} @else if (missing()) {
+  <p class="warn">Цей ринок не вдалося відкрити. Поверніться до списку і спробуйте інший.</p>
+} @else {
+  <p class="warn">Завантаження картки ринку…</p>
+}
